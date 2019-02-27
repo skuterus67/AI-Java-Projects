@@ -1,0 +1,320 @@
+package boardGame;
+
+import java.util.Scanner;
+import java.util.Stack;
+
+public class Minimax {
+
+//	
+//	01 function minimax(node, depth, maximizingPlayer)
+//	02     if depth = 0 or node is a terminal node
+//	03         return the heuristic value of node
+//
+//	04     if maximizingPlayer
+//	05         bestValue := -inf
+//	06         for each child of node
+//	07             v := minimax(child, depth - 1, FALSE)
+//	08             bestValue := max(bestValue, v)
+//	09         return bestValue
+//
+//	10     else    (* minimizing player *)
+//	11         bestValue := +inf
+//	12         for each child of node
+//	13             v := minimax(child, depth - 1, TRUE)
+//	14             bestValue := min(bestValue, v)
+//	15         return bestValue
+//	minimax(origin, depth, TRUE)
+	
+	public Gomoku gameCopy;
+	public Move bestMove = new Move();
+	public Move lastMove = new Move();
+	public int nodeCount = 0;
+	
+	public void performMove(Gomoku game, int row, int column, boolean startingPlayer){
+		game.setStone(row, column, startingPlayer);
+	}
+	
+	public void generateMoves(){
+		
+	}
+	
+//	public void initialize(Gomoku game){
+//		this.gameCopy;
+//	}
+	
+	public double calculateValue(Gomoku game, int player){
+		double value = 0;
+		if(game.checkForWin(this.lastMove.x, this.lastMove.y, player)){
+			value = Double.POSITIVE_INFINITY;
+		}
+		else if(game.checkForWin(this.lastMove.x, this.lastMove.y, player * (-1))){
+			value = Double.NEGATIVE_INFINITY;
+		}
+		else{
+			int index = 0;
+			for(int x=0; x<game.board.length; x++){
+				for(int y=0; y<game.board.length; y++){
+					int[] combos = game.checkCombo(this.lastMove.x, this.lastMove.y, player);
+					int[] opponentCombos = game.checkCombo(this.lastMove.x, this.lastMove.y, player * (-1));
+					value += (combos[0] - opponentCombos[0]) + (combos[1] - opponentCombos[1]) + (combos[2] - opponentCombos[2]) + (combos[3] - opponentCombos[3]);
+				}
+			}			
+		}	
+		return value;
+	}
+	
+	public void performBestMovement(Gomoku game, boolean player){
+		game.setStone(this.bestMove.x, this.bestMove.y, player);
+	}
+	
+	public double minimax(Gomoku game, int depth, boolean maximizingPlayer){
+		this.nodeCount++;
+		if(depth == 0){
+			if(maximizingPlayer){
+				return this.calculateValue(game, 1);
+			}
+			else{
+				return this.calculateValue(game, -1);
+			}
+		}
+		if(maximizingPlayer){
+			double bestValue = Double.NEGATIVE_INFINITY;
+			for(int x=0; x<game.board.length; x++){
+				for(int y=0; y<game.board.length; y++){
+					if(game.board[x][y] == 0){
+						this.gameCopy = new Gomoku(game);
+						this.performMove(this.gameCopy, x, y, maximizingPlayer);
+						this.lastMove.x = x;
+						this.lastMove.y = y;
+						double v = this.minimax(this.gameCopy, depth-1, false);
+						if(v > bestValue){
+							bestValue = Math.max(bestValue, v);
+							this.bestMove.x = x;
+							this.bestMove.y = y;
+						}
+					}
+				}	
+			}
+			return bestValue;
+		}
+		else{
+			double bestValue = Double.POSITIVE_INFINITY;
+			for(int x=0; x<game.board.length; x++){
+				for(int y=0; y<game.board.length; y++){
+					if(game.board[x][y] == 0){
+						this.gameCopy = new Gomoku(game);
+						this.performMove(this.gameCopy, x, y, maximizingPlayer);
+						this.lastMove.x = x;
+						this.lastMove.y = y;
+						double v = this.minimax(this.gameCopy, depth-1, true);
+						if(v > bestValue){
+							bestValue = Math.max(bestValue, v);
+							this.bestMove.x = x;
+							this.bestMove.y = y;
+						}
+					}
+				}	
+			}
+			return bestValue;
+		}
+	}
+	
+	
+//	01 function alphabeta(node, depth, alpha, beta, maximizingPlayer) is
+//	02     if depth = 0 or node is a terminal node then
+//	03         return the heuristic value of node
+//	04     if maximizingPlayer then
+//	05         v := -inf
+//	06         for each child of node do
+//	07             v := max(v, alphabeta(child, depth – 1, alpha, beta, FALSE))
+//	08             alpha := max(alpha, v)
+//	09             if beta <= alpha then
+//	10                 break (* beta cut-off *)
+//	11         return v
+//	12     else
+//	13         v := +inf
+//	14         for each child of node do
+//	15             v := min(v, alphabeta(child, depth – 1, alpha, beta, TRUE))
+//	16             beta := min(beta, v)
+//	17             if beta <= alpha then
+//	18                 break (* alpha cut-off *)
+//	19         return v
+//		alphabeta(origin, depth, -inf, +inf, TRUE)
+	
+	
+	public double alphaBeta(Gomoku game, int depth, double alpha, double beta, boolean maximizingPlayer){
+		this.nodeCount++;
+		if(depth == 0){
+			if(maximizingPlayer){
+				return this.calculateValue(game, 1);
+			}
+			else{
+				return this.calculateValue(game, -1);
+			}
+		}
+		if(maximizingPlayer){
+			double v = Double.NEGATIVE_INFINITY;
+			for(int x=0; x<game.board.length; x++){
+				for(int y=0; y<game.board.length; y++){
+					if(game.board[x][y] == 0){
+						this.gameCopy = new Gomoku(game);
+						this.performMove(this.gameCopy, x, y, maximizingPlayer);
+						this.lastMove.x = x;
+						this.lastMove.y = y;
+						v = Math.max(v, this.alphaBeta(this.gameCopy, depth-1, alpha, beta, false));
+						if(v > alpha){
+							alpha = Math.max(alpha, (int)v);
+							this.bestMove.x = x;
+							this.bestMove.y = y;
+						}
+						if(beta <= alpha)
+							break;
+					}
+				}
+			}
+			return v;
+		}
+		else{
+			double v = Double.POSITIVE_INFINITY;
+			for(int x=0; x<game.board.length; x++){
+				for(int y=0; y<game.board.length; y++){
+					if(game.board[x][y] == 0){
+						this.gameCopy = new Gomoku(game);
+						this.performMove(this.gameCopy, x, y, maximizingPlayer);
+						this.lastMove.x = x;
+						this.lastMove.y = y;
+						v = Math.min(v, this.alphaBeta(this.gameCopy, depth-1, alpha, beta, true));
+						if(v < beta){
+							beta = Math.min(beta, (int)v);
+							this.bestMove.x = x;
+							this.bestMove.y = y;
+						}
+						if(beta <= alpha)
+							break;
+					}
+				}
+			}
+			return v;
+		}
+	}
+	
+	public void printBoard(Gomoku game){
+		for(int i=0; i<game.board.length; i++){
+			for(int j=0; j<game.board.length; j++){
+				System.out.print(game.board[i][j] + "	");
+			}
+			System.out.println("");
+		}
+	}
+	
+	public static void main(String[] args){
+		Gomoku game = new Gomoku();
+		Minimax algorithm = new Minimax();
+		Scanner scanner = new Scanner(System.in);
+		while(game.winner == 0){
+			Move myMove = new Move();
+			myMove.x = scanner.nextInt();
+			myMove.y = scanner.nextInt();
+			game.setStone(myMove.x, myMove.y, true);
+			game.checkForWin(myMove.x, myMove.y, 1);
+			algorithm.printBoard(game);
+			System.out.println("");
+			if(game.winner == 0){
+				long startTime = System.nanoTime();
+				algorithm.alphaBeta(game, 3, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, false);
+				//algorithm.minimax(game, 3, false);
+				algorithm.performBestMovement(game, false);
+				game.checkForWin(algorithm.bestMove.x, algorithm.bestMove.y, -1);
+				long endTime = System.nanoTime();
+				double time = (endTime - startTime) / 1000000;
+				algorithm.printBoard(game);
+				System.out.println("");
+				System.out.println(algorithm.nodeCount + " ");
+				System.out.println(time + " miliseconds");
+				System.out.println("");
+			}
+		}
+		System.out.println("Game over");
+		if(game.winner == 1){
+			System.out.println("Player won");
+		}
+		else if(game.winner == -1){
+			System.out.println("Computer won");
+		}
+		scanner.close();
+	}
+}
+
+class Move {
+	public int x;
+	public int y;
+	
+	Move(){
+		this.x = 0;
+		this.y = 0;
+	}
+}
+
+//class Node {
+//	Node parent;
+//	Node[] children;
+//	Gomoku game;
+//	int value;
+//	
+//	int player;
+//	boolean startingPlayer;
+//	
+//	int row;
+//	int column;
+//	
+//	Node(Node parent, Gomoku game, int player, boolean startingPlayer, int row, int column){
+//		this.parent = parent;
+//		this.game = game;
+//		this.player = player;
+//		this.startingPlayer = startingPlayer;
+//		this.row = row;
+//		this.column = column;
+//		this.initializeChildren(game);
+//	}
+//	
+//	public void initializeChildren(Gomoku game){
+//		this.children = new Node[game.possibleMoves];
+//	}
+//	
+//	public void createChildren(Gomoku game){
+//		int row = 0;
+//		int column = 0;
+//		for(int i=0; i<this.children.length; i++){
+//			if(column == game.board.length){
+//				column = 0;
+//				row++;
+//			}
+//			if(game.getStone(row, column) == 0){
+//				this.children[i] = new Node(this, game, this.player * (-1), !this.startingPlayer, row, column);
+//			}
+//			column++;
+//		}
+//	}
+//	
+//	public void performMove(Gomoku game){
+//		game.setStone(this.row, this.column, this.startingPlayer);
+//	}
+//	
+//	public double calculateValue(Gomoku game, int player){
+//		double value = 0;
+//		if(game.checkForWin(this.row, this.column, player)){
+//			value = Double.POSITIVE_INFINITY;
+//		}
+//		else if(game.checkForWin(this.row, this.column, player * (-1))){
+//			value = Double.NEGATIVE_INFINITY;
+//		}
+//		else{
+//			int[] combos = game.checkCombos(this.row, this.column, player);
+//			//int neighbours = game.isMyNearby(this.row, this.column, player);
+//			int[] opponentCombos = game.checkCombos(this.row, this.column, player * (-1));
+//			//int opponentNeighbours = game.isMyNearby(this.row, this.column, player * (-1));
+//			value = combos[0] + combos[1] + combos[2] + combos[3] - (opponentCombos[0] + opponentCombos[1] + opponentCombos[2] + opponentCombos[3]);
+//		}	
+//		return value;
+//	}
+//}

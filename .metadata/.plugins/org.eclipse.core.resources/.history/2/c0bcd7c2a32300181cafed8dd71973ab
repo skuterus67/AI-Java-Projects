@@ -1,0 +1,202 @@
+package GA;
+
+import java.util.Arrays;
+import java.util.Random;
+
+import org.jfree.ui.RefineryUtilities;
+
+public class Population {
+	
+	public Individual[] population = new Individual[30];
+	public int[][] params = new String[30][2];
+	public int[] fitnessPoint = new int[30];
+	public float[] fitnessDist = new float[30];
+	public int crossoverPropability = 85;
+	public int mutationPropability = 10;
+	
+	public Population(Individual ind){
+		for (int i =0; i<this.population.length; i++){
+			this.population[i] = ind;
+		}
+	}
+	
+	public Individual[] initializePopulation(){
+		Individual[] tempPopulation = new Individual[30];
+		for(int i=0; i<tempPopulation.length; i++){	
+			int[] allels = {i%2,0,0,0,0,0,0,0,0,0};
+			Individual ind = new Individual(allels);
+			ind.initializeIndividual(ind);
+			tempPopulation[i] = ind;
+			//genes[i] = Arrays.toString(tempPopulation[i].chromosome);
+			}
+		return tempPopulation;
+	}
+	
+	public Population evaluatePopulation(Population pop){
+		GrayCode decoder = new GrayCode();
+		FitnessFunction fitness = new FitnessFunction();
+		int lineA = 0;
+		int lineB = 0;
+		for(int i=0; i<pop.population.length; i++){
+			decoder.decode(pop.population[i]);
+			lineA = decoder.x;
+			lineB = decoder.y;
+			for(int j=0; j<fitness.aboveX.length; j++){
+				fitness.calculateSign(fitness.aboveX[j], fitness.aboveY[j], lineA, lineB);
+				if(fitness.distanceSign==1){
+					pop.fitnessPoint[i]++;
+					pop.fitnessDist[i] = pop.fitnessDist[i] + fitness.calculateDistance(fitness.aboveX[j], fitness.aboveY[j], lineA, lineB);
+				}
+				fitness.calculateSign(fitness.belowX[j], fitness.belowY[j], lineA, lineB);
+				if(fitness.distanceSign==-1){
+					pop.fitnessPoint[i]++;
+					pop.fitnessDist[i] = pop.fitnessDist[i] + fitness.calculateDistance(fitness.belowX[j], fitness.belowY[j], lineA, lineB);
+				}
+			}
+			pop.params[i][0] = lineA;
+			pop.params[i][1] = lineB;
+		}
+		pop = sortEvaluatedPopulation(pop);
+		return pop;
+	}
+	
+	public Population sortEvaluatedPopulation(Population pop){
+		int[] allels = {0,0,0,0,0,0,0,0,0,0};
+		Individual ind = new Individual(allels);
+		Population tempPopulation = new Population(ind);
+		for(int i=0; i<tempPopulation.population.length; i++){
+			int biggestFitPoint = 0;
+			float lowestFitDist = 0;
+			int tempIndex = 0;
+			for(int j=0; j<tempPopulation.population.length; j++){
+				if(pop.fitnessPoint[j]>biggestFitPoint){
+					biggestFitPoint = pop.fitnessPoint[j];
+					lowestFitDist = pop.fitnessDist[j];
+					tempIndex = j;
+				}
+				else if(pop.fitnessPoint[j]==biggestFitPoint){
+					if(pop.fitnessDist[j]<lowestFitDist){
+						biggestFitPoint = pop.fitnessPoint[j];
+						lowestFitDist = pop.fitnessDist[j];
+						tempIndex = j;
+					} 
+				}
+			}
+				tempPopulation.population[i] = pop.population[tempIndex];
+				tempPopulation.fitnessDist[i] = pop.fitnessDist[tempIndex];
+				tempPopulation.fitnessPoint[i] = pop.fitnessPoint[tempIndex];
+				tempPopulation.params[i] = pop.params[tempIndex];
+				pop.population[tempIndex] = null;
+				pop.params[tempIndex] = null;
+				pop.fitnessDist[tempIndex] = -1;
+				pop.fitnessPoint[tempIndex] = -1;
+		}
+		return tempPopulation;
+	}
+	
+	public int selectParent(Population pop){
+		int sum=0;
+		for(int i=0; i<pop.population.length; i++){
+			sum = sum + pop.fitnessPoint[i];
+		}
+		int point1 = 0;
+		int tempSum = 0;
+		for(int i=0; i<pop.population.length; i++){
+			tempSum = tempSum + pop.fitnessPoint[i];
+			if((tempSum>=(sum/5)) && (tempSum-pop.fitnessPoint[i]<(sum/5))){
+				point1 = i;
+			}
+		}
+		return point1;
+	}
+	
+	public boolean calculatePropability(int prop){
+		Random r = new Random();
+		int randomValue = r.nextInt(101);
+		if(randomValue<=prop){
+			return true;
+		}
+		else
+			return false;
+	}
+	
+	public Population crossover(Population pop, int prop){
+		int parent = selectParent(pop);
+		Individual parent1 = pop.population[parent];
+		int[] allels = {0,0,0,0,0,0,0,0,0,0};
+		Individual temp1 = new Individual(allels);
+		Individual temp2 = new Individual(allels);
+		Population tempPop = new Population(temp1);
+		Random r = new Random();
+		int crossoverPoint = r.nextInt(9);
+		for(int j=0; j<pop.population.length/2; j++){
+			temp1 = new Individual(allels);
+			temp2 = new Individual(allels);
+			Individual parent2 = pop.population[j];
+			if(calculatePropability(prop)){
+				for(int i=0; i<crossoverPoint+1; i++){
+					temp1.chromosome[i] = parent1.chromosome[i];
+					temp2.chromosome[i] = parent2.chromosome[i];
+				}
+				for(int i=crossoverPoint+1; i<parent2.chromosome.length; i++){
+					temp1.chromosome[i] = parent2.chromosome[i];
+					temp2.chromosome[i] = parent1.chromosome[i];
+				}
+			}
+			else{
+				temp1.chromosome = parent1.chromosome;
+				temp2.chromosome = parent2.chromosome;
+			}
+			tempPop.population[j] = temp1;
+			tempPop.population[j+15] = temp2;
+			//tempPop.genes[j] = Arrays.toString(tempPop.population[j].chromosome);
+			//tempPop.genes[j+15] = Arrays.toString(tempPop.population[j+15].chromosome);
+		}
+		return tempPop;
+	}
+	
+	public void mutate(Population pop, int prop){
+		for(int i=0; i<pop.population.length; i++){
+			for(int j=0; j<pop.population[i].chromosome.length; j++){
+				if(calculatePropability(prop)){
+					pop.population[i].chromosome[j] = 1 - pop.population[i].chromosome[j];
+				}
+			}
+			//pop.genes[i] = Arrays.toString(pop.population[i].chromosome);
+		}
+	}
+	
+	public static void main(String[] args){
+		int generationCounter = 0;
+		int[] allels = {0,0,0,0,0,0,0,0,0,0};
+		Individual ind = new Individual(allels);
+		Population pop = new Population(ind);
+		pop.population = pop.initializePopulation();
+		do{
+			pop = pop.evaluatePopulation(pop);
+			Visualizer demo = new Visualizer("Genearation Result", pop);
+			demo.pack();
+		    RefineryUtilities.centerFrameOnScreen(demo);
+		    demo.setVisible(true);
+			for(int i=0; i<pop.population.length; i++){
+				//System.out.println(pop.genes[i]);
+				System.out.println(pop.fitnessPoint[i]);
+			}
+			System.out.println("\n");
+			System.out.println(pop.genes[pop.selectParent(pop)] + pop.selectParent(pop));
+			pop = pop.crossover(pop, pop.crossoverPropability);
+			System.out.println("\n");
+			for(int i=0; i<pop.population.length; i++){
+				//System.out.println(pop.genes[i]);
+			}
+			pop.mutate(pop, pop.mutationPropability);
+			System.out.println("\n");
+/*			for(int i=0; i<pop.population.length; i++){
+				System.out.println(pop.genes[i]);
+			}*/
+			generationCounter++;
+		} while(generationCounter<20);
+
+	}
+
+}

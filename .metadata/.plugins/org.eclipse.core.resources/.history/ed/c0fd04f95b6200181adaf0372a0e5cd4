@@ -1,0 +1,121 @@
+package boardGame;
+
+public class Minimax {
+
+//	
+//	01 function minimax(node, depth, maximizingPlayer)
+//	02     if depth = 0 or node is a terminal node
+//	03         return the heuristic value of node
+//
+//	04     if maximizingPlayer
+//	05         bestValue := -inf
+//	06         for each child of node
+//	07             v := minimax(child, depth - 1, FALSE)
+//	08             bestValue := max(bestValue, v)
+//	09         return bestValue
+//
+//	10     else    (* minimizing player *)
+//	11         bestValue := +inf
+//	12         for each child of node
+//	13             v := minimax(child, depth - 1, TRUE)
+//	14             bestValue := min(bestValue, v)
+//	15         return bestValue
+//	
+	
+	public int minimax(Node node, int depth, boolean maximizingPlayer){
+		
+	}
+	
+	
+//	01 function alphabeta(node, depth, alpha, beta, maximizingPlayer) is
+//	02     if depth = 0 or node is a terminal node then
+//	03         return the heuristic value of node
+//	04     if maximizingPlayer then
+//	05         v := -inf
+//	06         for each child of node do
+//	07             v := max(v, alphabeta(child, depth – 1, alpha, beta, FALSE))
+//	08             alpha := max(alpha, v)
+//	09             if beta <= alpha then
+//	10                 break (* beta cut-off *)
+//	11         return v
+//	12     else
+//	13         v := +inf
+//	14         for each child of node do
+//	15             v := min(v, alphabeta(child, depth – 1, alpha, beta, TRUE))
+//	16             beta := min(beta, v)
+//	17             if beta <= alpha then
+//	18                 break (* alpha cut-off *)
+//	19         return v
+	
+	
+	public int alphaBeta(Pylos game, Node node, int depth, int alpha, int beta, boolean maximizingPlayer){
+		if(depth == 0 || node.children.length == 0){
+			if(maximizingPlayer)
+				return node.calculateValue(game, 1);
+			else
+				return node.calculateValue(game, -1);
+		}
+		if(maximizingPlayer){
+			int v = -2147483647;
+			for(Node child : node.children){
+				v = Math.max(v, this.alphaBeta(node, depth-1, alpha, beta, false));
+				alpha = Math.max(alpha, v);
+				if(beta <= alpha)
+					break;
+			}
+			return v;
+		}
+		else{
+			int v = 2147483647;
+			for(Node child : node.children){
+				v = Math.min(v, this.alphaBeta(node, depth-1, alpha, beta, false));
+				alpha = Math.min(beta, v);
+				if(beta <= alpha)
+					break;
+			}
+			return v;
+		}
+	}
+}
+
+class Node {
+	Node parent;
+	Node[] children;
+	int value;
+	int numberOfMoves = 0;
+	
+	public void checkPossibleMoves(Pylos game, int player){
+		for(int height=0; height<game.board.size(); height++){
+			for(int i=0; i<game.board.get(height).length; i++){
+				for(int j=0; j<game.board.get(height).length; j++){
+					game.checkBoardForMoving(height, i, j);
+					if(game.getBall(height, i, j) == 0)
+						this.numberOfMoves++;
+					if(game.board.get(height)[i][j] == player && game.hasAbove(height, i, j))
+						this.numberOfMoves += this.checkFreeSpaceAbove(game, height);
+					if(game.checkForTaking(height, i, j, player))
+						this.numberOfMoves += 3;
+				}
+			}
+		}
+	}
+	
+	public int checkFreeSpaceAbove(Pylos game, int level){
+		int freeSpaces = 0;
+		if(level != 3){
+			for(int height=level+1; height<game.board.size(); height++){
+				for(int i=0; i<game.board.get(height).length; i++){
+					for(int j=0; j<game.board.get(height).length; j++){
+						if(game.getBall(height, i, j) == 0)
+							freeSpaces++;
+					}
+				}
+			}
+		}
+		return freeSpaces;
+	}
+	
+	public int calculateValue(Pylos game, int player){
+		
+	}
+}

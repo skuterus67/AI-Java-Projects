@@ -1,0 +1,171 @@
+package boardGame;
+
+public class Gomoku {
+
+	public int[][] board = new int[15][15];
+	public int possibleMoves = 0;
+	public int winner = 0;
+	
+	Gomoku(){
+		for(int i=0; i<this.board.length; i++){
+			for(int j=0; j<this.board.length; j++){
+				board[i][j] = 0;
+				possibleMoves++;
+			}
+		}
+	}
+	
+	public void setStone(int row, int column, boolean startingPlayer){
+		if(startingPlayer)
+			board[row][column] = 1;
+		else
+			board[row][column] = -1;
+		possibleMoves--;
+	}
+	
+	public void takeStone(int row, int column){
+		board[row][column] = 0;
+		possibleMoves++;
+	}
+	
+	public boolean checkForWin(){
+		return this.checkForWinRow() || this.checkForWinColumn() || this.checkForWinDiagonal();
+	}
+	
+	public boolean checkForWinRow(){
+		for(int i=0; i<this.board.length; i++){
+			int counter = 0;
+			int previousStone = 0;
+			for(int j=0; j<this.board.length; j++){
+				if(this.board[i][j] == previousStone && this.board[i][j] != 0){
+					counter++;
+					if(counter == 5)
+						return true;
+				}
+				else if(this.board[i][j] != previousStone && this.board[i][j] != 0){
+					counter = 1;
+					previousStone = this.board[i][j];
+				}
+				else if(this.board[i][j] == 0){
+					previousStone = 0;
+					counter = 0;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public boolean checkForWinColumn(){
+		for(int i=0; i<this.board.length; i++){
+			int counter = 0;
+			int previousStone = 0;
+			for(int j=0; j<this.board.length; j++){
+				if(this.board[j][i] == previousStone && this.board[j][i] != 0){
+					counter++;
+					if(counter == 5)
+						return true;
+				}
+				else if(this.board[j][i] != previousStone && this.board[j][i] != 0){
+					counter = 1;
+					previousStone = this.board[j][i];
+				}
+				else if(this.board[j][i] == 0){
+					previousStone = 0;
+					counter = 0;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public boolean checkForWinDiagonal(){
+		int counter = 0;
+		int previousStone = 0;
+		return this.checkDiagonalDescending(9, 0, counter, previousStone) || this.checkDiagonalAscending(4, 0, counter, previousStone);
+	}
+	
+	public boolean checkDiagonalDescending(int row, int column, int counter, int previousStone){
+		if(this.board[row][column] == previousStone && this.board[row][column] != 0){
+			counter++;
+			if(counter == 5)
+				return true;
+		}
+		else if(this.board[row][column] != previousStone && this.board[row][column] != 0){
+			counter = 1;
+			previousStone = this.board[row][column];
+		}
+		else if(this.board[row][column] == 0){
+			counter = 0;
+			previousStone = 0;
+		}
+		if(row != this.board.length-1){
+			if(column != this.board.length-1){
+				if(this.checkDiagonalDescending(row+1, column+1, counter, previousStone))
+					return true;
+			}
+			if(column == this.board.length-1){
+				if(this.checkDiagonalDescending(0, this.board.length-(row-1), counter, previousStone))
+					return true;
+			}
+		}
+		else{
+			if(column != this.board.length-1){
+				if(this.checkDiagonalDescending(this.board.length-(column+1), 0, counter, previousStone))
+					return true;
+			}
+			if(column == this.board.length-1){
+				if(this.checkDiagonalDescending(0, 1, counter, previousStone))
+					return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean checkDiagonalAscending(int row, int column, int counter, int previousStone){
+		if(this.board[row][column] == previousStone && this.board[row][column] != 0){
+			counter++;
+			if(counter == 5)
+				return true;
+		}
+		else if(this.board[row][column] != previousStone && this.board[row][column] != 0){
+			counter = 1;
+			previousStone = this.board[row][column];
+		}
+		else if(this.board[row][column] == 0){
+			counter = 0;
+			previousStone = 0;
+		}
+		if(row != 0){
+			if(column != this.board.length-1){
+				if(this.checkDiagonalAscending(row-1, column+1, counter, previousStone))
+					return true;
+			}
+			if(column == this.board.length-1){
+				if(this.checkDiagonalAscending(this.board.length-1, row+1, counter, previousStone))
+					return true;
+			}
+		}
+		else{
+			if(column != this.board.length-1){
+				if(this.checkDiagonalAscending(column+1, 0, counter, previousStone))
+					return true;
+			}
+			if(column == this.board.length-1){
+				if(this.checkDiagonalAscending(this.board.length-1, 1, counter, previousStone))
+					return true;
+			}
+		}
+		return false;
+	}
+	
+	public static void main (String[] args){
+		Gomoku game = new Gomoku();
+		game.setStone(0, 0, true);
+		game.setStone(1, 1, true);
+		game.setStone(2, 2, true);
+		game.setStone(3, 3, true);
+		game.setStone(4, 4, true);
+		System.out.println(game.checkForWin());
+	}
+	
+}
